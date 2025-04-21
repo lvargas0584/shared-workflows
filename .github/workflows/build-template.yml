@@ -17,6 +17,10 @@ on:
         required: false
         type: string
         default: 'zulu'
+      skip-tests:
+        required: false
+        type: boolean
+        default: false
 jobs:
   compile:
     runs-on: ${{ inputs.runs-on }}
@@ -33,6 +37,7 @@ jobs:
       - name: Build with Maven
         run: mvn clean compile
   test:
+    if: ${{ inputs.skip-tests != true }}
     runs-on: ${{ inputs.runs-on }}
     needs: [ compile ]
     steps:
