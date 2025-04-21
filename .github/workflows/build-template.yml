@@ -5,13 +5,21 @@ name: Build Template
 on:
   workflow_call:
     inputs:
-      java-version:
-        required: true
+      runs-on:
+        required: false
         type: string
-
+        default: 'ubuntu-latest'
+      java-version:
+        required: false
+        type: string
+        default: '21'
+      java-distribution:
+        required: false
+        type: string
+        default: 'zulu'
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  compile:
+    runs-on: ${{ inputs.runs-on }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -19,14 +27,23 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: ${{ inputs.java-distribution }}
           java-version: ${{ inputs.java-version }}
 
       - name: Build with Maven
-        run: mvn clean package
+        run: mvn clean compile
+  test:
+    runs-on: ${{ inputs.runs-on }}
+    needs: [ compile ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Upload target directory
-        uses: actions/upload-artifact@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
         with:
-          name: build-output
-          path: target/
+          distribution: ${{ inputs.java-distribution }}
+          java-version: ${{ inputs.java-version }}
+
+      - name: Build with Maven
+        run: mvn clean verify
